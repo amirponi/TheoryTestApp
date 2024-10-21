@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מבחן תאוריה ממוחשב</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: auto;
+        }
+        h1 {
+            text-align: center;
+        }
+        .question-container {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        .answers {
+            list-style-type: none;
+            padding: 0;
+        }
+        .answers li {
+            margin: 10px 0;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>מבחן תאוריה ממוחשב</h1>
+
+    <div id="question-container" class="question-container">
+        <h2 id="question-title">שאלה תוצג כאן</h2>
+        <ul id="answers-list" class="answers"></ul>
+        <button id="next-question">שאלה הבאה</button>
+    </div>
+
+    <script>
+        let questions = [];
+
+        // Function to load and parse the XML file
+        function loadXML() {
+            fetch('questions.xml')  // Replace with the actual path to the static resource
+                .then(response => response.text())
+                .then(xmlText => {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(xmlText, "text/xml");
+
+                    const items = xmlDoc.getElementsByTagName('item');
+                    for (let i = 0; i < items.length; i++) {
+                        const title = items[i].getElementsByTagName('title')[0].textContent;
+                        const descriptionHTML = items[i].getElementsByTagName('description')[0].textContent;
+
+                        // Extract answers from the description HTML using DOM parsing
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = descriptionHTML;
+                        const answers = Array.from(tempDiv.querySelectorAll('ul li')).map(li => li.textContent.trim());
+
+                        questions.push({ title, answers });
+                    }
+
+                    // Display the first question after loading
+                    displayQuestion();
+                })
+                .catch(error => console.error("Error loading XML:", error));
+        }
+
+        // Function to display a random question
+        function displayQuestion() {
+            if (questions.length === 0) return;
+
+            const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+
+            document.getElementById('question-title').textContent = randomQuestion.title;
+
+            const answersList = document.getElementById('answers-list');
+            answersList.innerHTML = '';
+
+            randomQuestion.answers.forEach(answer => {
+                const li = document.createElement('li');
+                li.textContent = answer;
+                answersList.appendChild(li);
+            });
+        }
+
+        // Event listener for the "Next Question" button
+        document.getElementById('next-question').addEventListener('click', displayQuestion);
+
+        // Load XML when the page loads
+        loadXML();
+    </script>
+
+</body>
+</html>
