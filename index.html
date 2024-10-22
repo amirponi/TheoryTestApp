@@ -21,16 +21,6 @@
             background-color: #f9f9f9;
             border-radius: 8px;
         }
-        .answers {
-            list-style-type: none;
-            padding: 0;
-        }
-        .answers li {
-            margin: 10px 0;
-        }
-        .answers li.correct {
-            background-color: yellow;
-        }
         button {
             display: block;
             width: 100%;
@@ -45,10 +35,6 @@
         button:hover {
             background-color: #45a049;
         }
-        .show-answer-btn {
-            background-color: #f39c12;
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
@@ -56,15 +42,13 @@
     <h1>מבחן תאוריה ממוחשב</h1>
 
     <div id="question-container" class="question-container">
-        <h2 id="question-title">שאלה תוצג כאן</h2>
-        <ul id="answers-list" class="answers"></ul>
-        <button id="show-answer" class="show-answer-btn">הצג תשובה נכונה</button>
-        <button id="next-question">שאלה הבאה</button>
+        <!-- Question and answers will be injected here -->
     </div>
+
+    <button id="next-question">שאלה הבאה</button>
 
     <script>
         let questions = [];
-        let currentCorrectAnswer;
 
         // Function to load and parse the XML file
         function loadXML() {
@@ -79,13 +63,8 @@
                         const title = items[i].getElementsByTagName('title')[0].textContent;
                         const descriptionHTML = items[i].getElementsByTagName('description')[0].textContent;
 
-                        // Extract answers from the description HTML using DOM parsing
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = descriptionHTML;
-                        const answers = Array.from(tempDiv.querySelectorAll('ul li')).map(li => li.textContent.trim());
-                        const correctAnswerElement = tempDiv.querySelector('[id^="correctAnswer"]');
-
-                        questions.push({ title, answers, correctAnswerIndex: Array.from(tempDiv.querySelectorAll('ul li')).indexOf(correctAnswerElement) });
+                        // Push the raw question HTML to the questions array
+                        questions.push({ title, descriptionHTML });
                     }
 
                     // Display the first question after loading
@@ -98,41 +77,18 @@
         function displayQuestion() {
             if (questions.length === 0) return;
 
+            // Select a random question
             const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
-            currentCorrectAnswer = randomQuestion.correctAnswerIndex;
 
-            document.getElementById('question-title').textContent = randomQuestion.title;
-
-            const answersList = document.getElementById('answers-list');
-            answersList.innerHTML = '';
-
-            // Display answers with letters (A, B, C, D)
-            const letters = ['A', 'B', 'C', 'D'];
-            randomQuestion.answers.forEach((answer, index) => {
-                const li = document.createElement('li');
-                li.textContent = `${letters[index]}. ${answer}`;
-                li.setAttribute('data-index', index);  // Set a data attribute for easier access
-                if (index === currentCorrectAnswer) {
-                    li.classList.add('correct');  // Add class for correct answer (hidden initially)
-                    li.style.display = 'none';   // Hide it initially
-                }
-                answersList.appendChild(li);
-            });
-
-            document.getElementById('show-answer').style.display = 'block';  // Show the button
+            // Set the inner HTML of the question container
+            document.getElementById('question-container').innerHTML = `
+                <h2>${randomQuestion.title}</h2>
+                ${randomQuestion.descriptionHTML}
+            `;
         }
 
         // Event listener for the "Next Question" button
         document.getElementById('next-question').addEventListener('click', displayQuestion);
-
-        // Event listener for "Show Correct Answer" button
-        document.getElementById('show-answer').addEventListener('click', () => {
-            const correctAnswer = document.querySelector('.correct');
-            if (correctAnswer) {
-                correctAnswer.style.display = 'block';  // Show the correct answer
-            }
-            document.getElementById('show-answer').style.display = 'none';  // Hide the "Show Correct Answer" button
-        });
 
         // Load XML when the page loads
         loadXML();
